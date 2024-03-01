@@ -3,7 +3,7 @@
 <html>
   <head>
     <link rel="stylesheet" type="text/css" href="lib/bootstrap/css/bootstrap.css"/>
-    <script src="lib/d3/d3.v3.min.js"></script>
+    <script src="https://d3js.org/d3.v3.min.js"></script>
     <script src="d3sparql.js"></script>
     <script>
     function exec() {
@@ -12,53 +12,56 @@
       d3sparql.query(endpoint, sparql, render)
     }
     function render(json) {
+      console.log(json)
       var config = {
+        "label_x": "Descent of the victim",
+        "label_y": "Count",
+        "var_x": "vdesc",
+        "var_y": "count",
+        "width":  700,  // canvas width
+        "height": 300,  // canvas height
+        "margin":  80,  // canvas margin
         "selector": "#result"
       }
-      d3sparql.htmlhash(json, config)
+      d3sparql.barchart(json, config)
     }
 
     function exec_offline() {
-      d3.json("cache/gene/slr1311.json", render)
+      d3.json("cache/dbpedia/area-ja.json", render)
     }
     function toggle() {
       d3sparql.toggle()
     }
+    window.onload = exec
     </script>
+    <style>
+    .bar:hover {
+      fill: brown;
+    }
+    </style>
   </head>
   <body>
-    <div id="query" style="margin: 10px">
-      <h1>d3htmlhash</h1>
+    <div id="query" style="margin: 50px">
+      <h1>Descent of Victim</h1>
       <form class="form-inline">
         <label>SPARQL endpoint:</label>
         <div class="input-append">
-          <input id="endpoint" class="span5" value="http://dbpedia.org/sparql" type="text">
+          <input id="endpoint" class="span5" value="http://localhost:3030/crime/sparql" type="text">
           <button class="btn" type="button" onclick="exec()">Query</button>
           <button class="btn" type="button" onclick="exec_offline()">Use cache</button>
           <button class="btn" type="button" onclick="toggle()"><i id="button" class="icon-chevron-up"></i></button>
         </div>
       </form>
       <textarea id="sparql" class="span9" rows=15>
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX dbo: <http://dbpedia.org/ontology/>
-PREFIX dbp: <http://dbpedia.org/property/>
-PREFIX dbr: <http://dbpedia.org/resource/>
-
-SELECT ?language ?description ?developer ?paradigm ?version
-WHERE {
-  VALUES ?language { "SPARQL"@en }
-  ?s rdf:type dbo:ProgrammingLanguage ;
-     rdfs:label ?language ;
-     rdfs:comment ?description ;
-     dbo:developer/rdfs:label ?developer ;
-     dbp:paradigm/rdfs:label ?paradigm ;
-     dbo:latestReleaseVersion ?version .
-  FILTER (lang(?description) = 'en')
-  FILTER (lang(?developer) = 'en')
-  FILTER (lang(?paradigm) = 'en')
-}
-LIMIT 1
+        PREFIX : <http://crime-register/>
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        SELECT (?Victim_descent AS ?vdesc) (str(COUNT(?Victim_descent)) AS ?count) WHERE {
+          ?s :victim_info ?vi .
+          ?vi :Victim_descent ?Victim_descent
+        }
+        GROUP BY ?Victim_descent
       </textarea>
     </div>
     <div id="result"></div>

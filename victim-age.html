@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <html>
   <head>
     <link rel="stylesheet" type="text/css" href="lib/bootstrap/css/bootstrap.css"/>
-    <script src="lib/d3/d3.v3.min.js"></script>
+    <script src="https://d3js.org/d3.v3.min.js"></script>
     <script src="d3sparql.js"></script>
     <script>
     function exec() {
@@ -12,54 +12,56 @@
       d3sparql.query(endpoint, sparql, render)
     }
     function render(json) {
+      console.log(json)
       var config = {
-        // for d3sparql.tree()
-        "root": "root_name",
-        "parent": "parent_name",
-        "child": "child_name",
-        // for d3sparql.treemap()
-        "width": 800,
-        "height": 500,
+        "label_x": "Age of the victim",
+        "label_y": "Count",
+        "var_x": "vage",
+        "var_y": "count",
+        "width":  1000,  // canvas width
+        "height": 300,  // canvas height
+        "margin":  80,  // canvas margin
         "selector": "#result"
       }
-      d3sparql.treemap(json, config)
+      d3sparql.barchart(json, config)
     }
 
     function exec_offline() {
-      d3.json("cache/taxonomy/tardigrada.json", render)
+      d3.json("cache/dbpedia/area-ja.json", render)
     }
     function toggle() {
       d3sparql.toggle()
     }
+    window.onload = exec
     </script>
+    <style>
+    .bar:hover {
+      fill: brown;
+    }
+    </style>
   </head>
   <body>
-    <div id="query" style="margin: 10px">
-      <h1>d3treemap</h1>
+    <div id="query" style="margin: 50px">
+      <h1>Age of the victims</h1>
       <form class="form-inline">
         <label>SPARQL endpoint:</label>
         <div class="input-append">
-          <input id="endpoint" class="span5" value="http://togostanza.org/sparql" type="text">
+          <input id="endpoint" class="span5" value="http://localhost:3030/crime/sparql" type="text">
           <button class="btn" type="button" onclick="exec()">Query</button>
           <button class="btn" type="button" onclick="exec_offline()">Use cache</button>
           <button class="btn" type="button" onclick="toggle()"><i id="button" class="icon-chevron-up"></i></button>
         </div>
       </form>
       <textarea id="sparql" class="span9" rows=15>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX tax: <http://ddbj.nig.ac.jp/ontologies/taxonomy/>
-
-SELECT DISTINCT ?root_name ?parent_name ?child_name
-FROM <http://togogenome.org/graph/taxonomy>
-WHERE
-{
-  VALUES ?root_name { "Tardigrada" }
-  ?root tax:scientificName ?root_name .
-  ?child rdfs:subClassOf+ ?root .
-  ?child rdfs:subClassOf ?parent .
-  ?child tax:scientificName ?child_name .
-  ?parent tax:scientificName ?parent_name .
-}
+        PREFIX : <http://crime-register/>
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        SELECT (?Victim_age AS ?vage) (str(COUNT(?Victim_age)) AS ?count) WHERE {
+          ?s :victim_info ?vi .
+          ?vi :Victim_age ?Victim_age
+        }
+        GROUP BY ?Victim_age
       </textarea>
     </div>
     <div id="result"></div>

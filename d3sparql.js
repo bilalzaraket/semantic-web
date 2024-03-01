@@ -673,11 +673,24 @@ d3sparql.scatterplot = function(json, config) {
   var extent_x = d3.extent(data, function(d) { return parseInt(d[opts.var_x].value) })
   var extent_y = d3.extent(data, function(d) { return parseInt(d[opts.var_y].value) })
   var extent_r = d3.extent(data, function(d) { return parseInt(d[opts.var_r] ? d[opts.var_r].value : opts.var_r) })
-  var scale_x = d3.scale.linear().range([opts.margin_x, opts.width - opts.margin_x]).domain(extent_x)
-  var scale_y = d3.scale.linear().range([opts.height - opts.margin_y, opts.margin_y]).domain(extent_y)
+  // var scale_x = d3.scale.linear().range([opts.margin_x, opts.width - opts.margin_x]).domain(extent_x)
+  // var scale_y = d3.scale.linear().range([opts.height - opts.margin_y, opts.margin_y]).domain(extent_y)
+  var center = { x: -120, y: 34 }
+  var scaleMultiplier = 0.07
+  var scale_x = d3.scale.linear()
+  .range([opts.margin_x, opts.width - opts.margin_x])
+  .domain(extent_x.map(function(d) { return (d - center.x) * scaleMultiplier + center.x; }))
+  var scale_y = d3.scale.linear()
+  .range([opts.height - opts.margin_y, opts.margin_y])
+  .domain(extent_y.map(function(d) { return (d - center.y) * scaleMultiplier + center.y; }))
+
   var scale_r = d3.scale.linear().range([opts.min_r, opts.max_r]).domain(extent_r)
   var axis_x = d3.svg.axis().scale(scale_x)
   var axis_y = d3.svg.axis().scale(scale_y).orient("left")
+
+
+
+
 
   var svg = d3sparql.select(opts.selector, "scatterplot").append("svg")
     .attr("width", opts.width)
@@ -2019,6 +2032,188 @@ d3sparql.namedmap = function(json, config) {
       .text(function(d) { return d.properties[opts.keyname] })
   })
 }
+
+// Added by bilal
+
+/*
+  Crime Locations Map on the USA
+
+  Options:
+    config = {
+      "longitude":   "LONGITUDE",    // Field name for longitude
+      "latitude":    "LATITUDE",     // Field name for latitude
+      "location":    "LOCATION",     // Field name for location
+      "width":       1000,            // canvas width (optional)
+      "height":      1000,            // canvas height (optional)
+      "color":       "red",           // color for crime locations (optional)
+      "selector":    "#result"
+    }
+
+  Synopsis:
+    d3sparql.query(endpoint, sparql, render)
+
+    function render(json) {
+      d3sparql.crimeLocationsMap(json, config = {})
+    }
+*/
+
+d3sparql.crimeLocationsMap = function(json, config) {
+  config = config || {};
+
+  var head = json.head.vars;
+  var data = json.results.bindings;
+
+  // Config treatment
+  var opts = {
+    "longitude":   config.longitude   || head[0] || "Longitude",
+    "latitude":    config.latitude    || head[1] || "Latitude",
+    "location":    config.location    || head[2] || "location",
+    "width":       config.width       || 1000,
+    "height":      config.height      || 1000,
+    "color":       config.color       || "red",
+    "selector":    config.selector    || null,
+    "topojson":    config.topojson    || ".\\topojson\\counties-10m.json"
+  };
+  // Set up the map dimensions
+var width = 800;
+var height = 500;
+
+// Create an SVG container
+var svg = d3.select("body")
+  .append("svg")
+  .attr("width", width)
+  .attr("height", height);
+
+// Set up a projection
+var projection = d3.geo.albersUsa()
+  .translate([width / 2, height / 2])
+  .scale([1000]);
+
+// Create a path generator
+var path = d3.geo.path().projection(projection);
+
+// Load TopoJSON data
+d3.json(opts.topojson, function(error, us) {
+  if (error) throw error;
+  try {
+    // Draw counties
+    svg.selectAll("path")
+    .data(topojson.feature(us, us.objects.county).features)
+    .enter().append("path")
+    .attr("d", path)
+    .style("fill", "lightgray")
+    .style("stroke", "white");
+  } catch(e) {
+    svg.selectAll("path")
+    .data(topojson.feature(us, us.objects.counties).features)
+    .enter().append("path")
+    .attr("d", path)
+    .style("fill", "lightgray")
+    .style("stroke", "white");
+  }
+  
+});
+
+
+// Draw data points
+    var circles = svg.selectAll("circle")
+      .data(data)
+      .enter()
+      .append("circle")
+      .attr("cx", function(d) {
+        var longitude = parseFloat(d[opts.longitude].value);
+        var latitude = parseFloat(d[opts.latitude].value);
+        if (longitude === 0 || latitude === 0) {
+          return 0;
+        }
+        return projection([longitude, latitude])[0];
+      })
+      .attr("cy", function(d) {
+        var longitude = parseFloat(d[opts.longitude].value);
+        var latitude = parseFloat(d[opts.latitude].value);
+        if (longitude === 0 || latitude === 0) {
+          return 0;
+        }
+        return projection([longitude, latitude])[1];
+      })
+      .attr("r", 4) // Adjust the radius as needed
+      .attr("fill", opts.color)
+      .append("title")
+      .text(function(d) { return d[opts.location].value; });
+}
+  /*
+  var svg = d3sparql.select(opts.selector, "crimelocationsmap").append("svg")
+    .attr("width", opts.width)
+    .attr("height", opts.height);
+  
+  
+  d3.json(opts.topojson, function(error, us) {
+   var path = d3.geo.path.projection(projection);
+
+   svg.selectAll("path")
+      .data(topojson.feature(us, us.objects.counties).features)
+      .enter().append("path")
+      .attr("d", path)
+      .style("fill", opts.color);
+});
+
+  d3.json(opts.topojson, function(error, geoData) {
+    if (error) {
+      console.error("Error loading TopoJSON data:", error);
+      return;
+    }
+
+    // Validate presence of necessary fields in the JSON data
+    if (!geoData || !geoData.objects || !geoData.objects.counties || !geoData.objects.counties.geometries) {
+      console.error("TopoJSON data is missing necessary fields");
+      return;
+    }
+
+    var projection = d3.geo.albersUsa()
+      .scale(1300)
+      .translate([opts.width / 2, opts.height / 2]);
+
+    var path = d3.geo.path().projection(projection);
+    var geojson = topojson.feature(geoData, geoData.objects.counties);
+
+    // Draw map using TopoJSON features
+    svg.selectAll("path")
+      .data(geoData.features)
+      .enter().append("path")
+      .attr("d", path)
+      .style("fill", "lightgray")
+      .style("stroke", "white");
+
+    var circles = svg.selectAll("circle")
+      .data(data)
+      .enter()
+      .append("circle")
+      .attr("cx", function(d) {
+        var longitude = parseFloat(d[opts.longitude].value);
+        var latitude = parseFloat(d[opts.latitude].value);
+        if (longitude === 0 || latitude === 0) {
+          return 0;
+        }
+        return projection([longitude, latitude])[0];
+      })
+      .attr("cy", function(d) {
+        var longitude = parseFloat(d[opts.longitude].value);
+        var latitude = parseFloat(d[opts.latitude].value);
+        if (longitude === 0 || latitude === 0) {
+          return 0;
+        }
+        return projection([longitude, latitude])[1];
+      })
+      .attr("r", 5) // Adjust the radius as needed
+      .attr("fill", opts.color)
+      .append("title")
+      .text(function(d) { return d[opts.location].value; });
+  });
+};*/
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 d3sparql.select = function(selector, type) {
   if (selector) {

@@ -1,111 +1,33 @@
-d3sparql.js
-===========
+# Crime Representation Application
 
-JavaScript library for executing SPARQL query and transforming resulted JSON for visualization in D3.js.
+This repository studies the crime dataset available at: https://catalog.data.gov/dataset/crime-data-from-2020-to-present
 
-### Description
+This dataset reflects incidents of crime in the City of Los Angeles dating back to 2020. This data is transcribed from original crime reports that are typed on paper and therefore there may be some inaccuracies within the data. Some location fields with missing data are noted as (0°, 0°). Address fields are only provided to the nearest hundred block in order to maintain privacy.
 
-Semantic Web technologies are getting widely used in information sciences along with the Linked Open Data (LOD) initiative and RDF data are exposed at SPARQL endpoints around the world. SPARQL query is used to search those endpoints and the results are obtained as a SPARQL Query Results XML Format or a SPARQL Query Results JSON Format, both are essentially tabular structured data. To effectively represent the SPARQL results, appropriate visualization methods are highly demanded. To create and control dynamic graphical representation of data on the Web, the D3.js JavaScript library is getting popularity as a generic framework based on the widely accepted Web standards such as SVG, JavaScript, HTML5 and CSS. A variety of visualization examples implemented with the D3.js library are already freely available, however, each of them depends on a predefined JSON data structure that differs from the JSON structure returned from SPARQL endpoints. Therefore, it is expected to largely reduce development costs of Semantic Web visualization if a JavaScript library is available which can transform SPARQL Query Results JSON Format into JSON data structures consumed by the D3.js. The d3sparql.js is developed as a generic JavaScript library to fill this gap which can be used to query SPARQL endpoints as an AJAX call and provides various callback functions to visualize the obtained results.
+Our repository contains different html documents, each displaying specific fields and aspects of the crime dataset and displaying the data using different diagrams.
 
-### Currently supports
+### Currently available pages:
 
-* Charts
-  * barchart, piechart, scatterplot
-* Graphs
-  * force graph, sankey graph
-* Trees
-  * roundtree, dendrogram, treemap, sunburst, circlepack
-* Maps
-  * coordmap, namedmap
-* Tables
-  * htmltable, htmlhash
+- descent-of-victim.html: piechart to represent the descent of the victim
+- longlat-scatterplot.html: scatterplot to represent the location distribution ( + hashtable)
+- los-angeles-crime-distribution.html: map of los angeles to represent the crime distribution
+- number-of-parts.html: piechart that represents the number of parts of the crime
+- status-of-crime.html: piechart to represent the different statuses of the crimes
+- us-map.html: us map to represent crime distribution
+- victim-age.html: histogram to represent the age distribution of victims
+- victim-sex: piechart to represent victims' sexes
 
-### Usage
+### Running the application:
 
-```html
-<!DOCTYPE html>
-<meta charset="utf-8">
-<html>
- <head>
-  <script src="http://d3js.org/d3.v3.min.js"></script>
-  <script src="d3sparql.js"></script>
-  <script>
-  function exec() {
-    /* Uncomment to see debug information in console */
-    // d3sparql.debug = true
-    var endpoint = d3.select("#endpoint").property("value")
-    var sparql = d3.select("#sparql").property("value")
-    d3sparql.query(endpoint, sparql, render)
-  }
-  function render(json) {
-    /* set options and call the d3spraql.xxxxx function in this library ... */
-    var config = {
-	  "selector": "#result"
-	}
-    d3sparql.xxxxx(json, config)
-  }
-  </script>
-  <style>
-  <!-- customize CSS -->
-  </style>
- </head>
- <body onload="exec()">
-  <form style="display:none">
-   <input id="endpoint" value="http://dbpedia.org/sparql" type="text">
-   <textarea id="sparql">
-    PREFIX ...
-    SELECT ...
-    WHERE { ... }
-   </textarea>
-  </form>
-  <div id="result"></div>
- </body>
-</html>
-```
+To run the application, follow the following steps:
 
-### Live demo
+- clone the repository
+- download fuseki server following the steps defined in this website: https://jena.apache.org/documentation/fuseki2/
+- run the fuseki server using the command ./fuseki-server
+- open the web interface of apache jena fuseki and create a dataset `http://localhost:3030/`
+- Upload the rdf schema found in `.\rdf-schema\Crime_Data_from_2020_to_Present_csv.ttl`
+- run a live server and open index.html
+- You can access any of the html pages using the Study aspects and maps tabs
+- each html page has the diagram and the SPARQL code used to request the data that constitutes it
 
-* http://biohackathon.org/d3sparql
-
-### Codebase
-
-* https://github.com/ktym/d3sparql
-
-### Publication
-
-* http://ceur-ws.org/Vol-1320/paper_39.pdf
-
-### Presentation
-
-* http://www.slideshare.net/ToshiakiKatayama/d3sparqljs-demo-at-swat4ls-2014-in-berlin
-
-### License
-
-* The d3sparql.js library is distributed under the same license as D3.js's ([BSD license](http://opensource.org/licenses/BSD-3-Clause)).
-
-### ChangeLog
-
-See details at https://github.com/ktym/d3sparql/commits/master/d3sparql.js
-
-* 2013-01-28 Project started
-* 2014-07-03 Made publicly available at GitHub
-* 2014-07-14 Added bar/line charts ```barchart()``` with scales
-* 2014-07-17 Added default SVG attributes equivalent to CSS styles
-  * Visualizations look good without CSS by default (user can customize style by CSS)
-  * Added descriptions to each visualization function
-* 2014-07-19 Introduced ```d3sparql``` name space
-* 2014-07-20 Added Pie, Doughnut ```piechart()```, Sankey diagram ```sankey()``` and a name based map ```namedmap()```
-* 2014-11-13 Merged a pull request to visualize a coordination based map ```coordmap()```
-* 2014-12-11 Updated to set default values in options
-* 2015-02-03 Added README file
-  * updated namedmap to use an option for scale
-  * merged a pull request to insert visualization at the specified DOM ID instead of appending to the body
-* 2015-02-04 Improved to customize the target DOM ID
-* 2015-02-06 Changed to clear the DOM contents before appending elements to update the visualization
-* 2015-05-21 Updated ```tree()``` and ```graph()``` to keep values associated to nodes
-  * Values are reflected in the ```treemap()```, ```sunburst()``` and ```forcegraph()``` visualizations
-* 2015-05-21 Debug mode is introduced
-  * Assign ```d3sparql.debug = true``` at anytime to enable verbose console log
-* 2015-05-25 Incorporated ```treemapzoom()``` useful to dig into a nested tree (in which each leaf may have a value)
-
-
+The diagrams are displayed using D3 and d3sparql (https://github.com/ktym/d3sparql), in addition to some functions we added to d3sparql.js (crimeLocationsMap)

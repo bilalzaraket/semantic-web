@@ -3,7 +3,7 @@
 <html>
   <head>
     <link rel="stylesheet" type="text/css" href="lib/bootstrap/css/bootstrap.css"/>
-    <script src="lib/d3/d3.v3.min.js"></script>
+    <script src="https://d3js.org/d3.v3.min.js"></script>
     <script src="d3sparql.js"></script>
     <script>
     function exec() {
@@ -13,57 +13,50 @@
     }
     function render(json) {
       var config = {
-        "label_x": "Prefecture",
-        "label_y": "Area",
-        "var_x": "pref",
-        "var_y": "area",
-        "width":  700,  // canvas width
-        "height": 300,  // canvas height
-        "margin":  80,  // canvas margin
+        "label_x": "Longitude",
+        "label_y": "Latitude",
+        "width": 850,
+        "height": 300,
+        "margin_x": 80,
+        "margin_y": 40,
         "selector": "#result"
       }
-      d3sparql.barchart(json, config)
+      console.log(json)
+      d3sparql.scatterplot(json, config)
+      d3sparql.htmltable(json)
     }
 
     function exec_offline() {
-      d3.json("cache/dbpedia/area-ja.json", render)
+      d3.json("cache/interpro/1117-hk.json", render)
     }
     function toggle() {
       d3sparql.toggle()
     }
+    window.onload = exec
     </script>
-    <style>
-    .bar:hover {
-      fill: brown;
-    }
-    </style>
   </head>
   <body>
-    <div id="query" style="margin: 10px">
-      <h1>d3barchart</h1>
+    <div id="query" style="margin: 50px">
+      <h1>Longitude latitude distribution of Crimes:</h1>
       <form class="form-inline">
         <label>SPARQL endpoint:</label>
         <div class="input-append">
-          <input id="endpoint" class="span5" value="http://dbpedia.org/sparql" type="text">
+          <input id="endpoint" class="span5" value="http://localhost:3030/crime/sparql" type="text">
           <button class="btn" type="button" onclick="exec()">Query</button>
           <button class="btn" type="button" onclick="exec_offline()">Use cache</button>
           <button class="btn" type="button" onclick="toggle()"><i id="button" class="icon-chevron-up"></i></button>
         </div>
       </form>
       <textarea id="sparql" class="span9" rows=15>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX yago: <http://dbpedia.org/class/yago/>
-PREFIX dbpedia-owl: <http://dbpedia.org/ontology/>
-
-SELECT ?pref ?area
-WHERE {
-  ?s a yago:WikicatPrefecturesOfJapan ;
-     rdfs:label ?pref ;
-     dbpedia-owl:areaTotal ?area_total .
-  FILTER (lang(?pref) = 'en')
-  BIND ((?area_total / 1000 / 1000) AS ?area)
-}
-ORDER BY DESC(?area)
+        PREFIX : <http://crime-register/>
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        SELECT DISTINCT (str(?lon) as ?Longitude) (str(?lat) as ?Latitude)
+        WHERE {
+          ?s :location_data ?bl .
+          ?bl :Latitude ?lat .
+          ?bl :Longitude ?lon .
+        }
       </textarea>
     </div>
     <div id="result"></div>

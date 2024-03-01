@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="lib/bootstrap/css/bootstrap.css"/>
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="http://d3js.org/topojson.v1.min.js"></script>
+    <script src="d3sparql.js"></script>
+    <script>
+    function exec() {
+      var endpoint = d3.select("#endpoint").property("value")
+      var sparql = d3.select("#sparql").property("value")
+      console.log(endpoint)
+      console.log(sparql)
+      d3sparql.query(endpoint, sparql, render)
+    }
+    function checkJson() {
+        d3.json(".\\topojson\\037.json", function (error, geojsonData) {
+
+          if (error) {
+            console.error("Error loading GeoJSON data:", error);
+            return;
+          }
+
+          //var geoson = topojson.feature(geojsonData, geojsonData.objects.counties);
+          // console.log("extracted geoJson: ", geoson)
+          // console.log(geojsonData.objects.counties.geometries);
+          // console.log("GeoJSON data loaded successfully", geojsonData);
+
+          // // Check if the data is empty or undefined
+          // if (!geojsonData || !geojsonData.objects || !geojsonData.objects.counties) {
+          //   console.error("GeoJSON data is empty or malformed");
+          //   return;
+          // }
+
+          // Additional code for processing the data
+        });
+      }
+
+
+    function render(json) {
+      checkJson()
+      console.log("The json is " + json)
+      var config = {
+        "label":      "label",
+        "value":      "size",
+        "color_max":  "red",
+        "topojson":   ".\\topojson\\037.json",
+        "mapname":    "Los Angeles",
+        "keyname":    "name_local",
+        "center_lat": 34,
+        "center_lng": 137,
+        "scale":      10000,
+        "selector":   "#result"
+      }
+      console.log(config.top)
+      console.log("The config is: " + config)
+      console.log(d3.json(".\\topojson\\037.json"))
+      d3sparql.crimeLocationsMap(json, config)
+    }
+
+    function exec_offline() {
+      d3sparql.debug = true
+      d3.json("cache/dbpedia/japan.json", render)
+    }
+    function toggle() {
+      d3sparql.toggle()
+    }
+    window.onload = exec
+    </script>
+  </head>
+  <body>
+    <div id="query" style="margin: 50px">
+      <h1>Los Angeles map:</h1>
+      <form class="form-inline">
+        <label>SPARQL endpoint:</label>
+        <div class="input-append">
+          <input id="endpoint" class="span5" value="http://localhost:3030/crime/sparql" type="text">
+          <button class="btn" type="button" onclick="exec()">Query</button>
+          <button class="btn" type="button" onclick="exec_offline()">Use cache</button>
+          <button class="btn" type="button" onclick="toggle()"><i id="button" class="icon-chevron-up"></i></button>
+        </div>
+      </form>
+      <textarea id="sparql" class="span9" rows=15>
+        PREFIX : <http://crime-register/>
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        SELECT DISTINCT (str(?lon) as ?Longitude) (str(?lat) as ?Latitude) (?loc as ?location)
+        WHERE {
+          ?s :location_data ?bl .
+          ?bl :Latitude ?lat .
+          ?bl :Longitude ?lon .
+          ?bl :location_name ?loc .
+        }
+      </textarea>
+    </div>
+    <div id="result"></div>
+  </body>
+</html>
