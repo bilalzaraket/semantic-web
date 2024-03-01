@@ -1,3 +1,5 @@
+## Copyright
+© Bilal ZARAKET
 # Crime Representation Application
 
 This repository studies the crime dataset available at: https://catalog.data.gov/dataset/crime-data-from-2020-to-present
