@@ -31,3 +31,8 @@ To run the application, follow the following steps:
 - each html page has the diagram and the SPARQL code used to request the data that constitutes it
 
 The diagrams are displayed using D3 and d3sparql (https://github.com/ktym/d3sparql), in addition to some functions we added to d3sparql.js (crimeLocationsMap)
+
+We also use two TOPOJSON files found in topojson folder, to display the different maps, these files are extracted from:
+
+- https://github.com/datadesk/california-topojson-atlas/tree/master/build/counties/processed/county-level (for LA)
+- https://github.com/topojson/us-atlas?tab=readme-ov-file
